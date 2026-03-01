@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw 最佳实践案例报告</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6; color: #333; background: #f5f5f5;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 40px 20px; text-align: center; border-radius: 10px; margin-bottom: 30px;
+        }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .subtitle { font-size: 1.1em; opacity: 0.9; }
+        .card { 
+            background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 { color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-bottom: 20px; }
+        h3 { color: #764ba2; margin: 20px 0 10px; }
+        code { 
+            background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+        pre { 
+            background: #282c34; color: #abb2bf; padding: 15px; border-radius: 8px; 
+            overflow-x: auto; margin: 15px 0; font-size: 0.85em;
+        }
+        pre code { background: none; padding: 0; color: inherit; }
+        .tag { 
+            display: inline-block; background: #e8f5e9; color: #2e7d32; 
+            padding: 4px 12px; border-radius: 20px; font-size: 0.85em; margin: 2px;
+        }
+        .tag.advanced { background: #fff3e0; color: #e65100; }
+        .tag.automation { background: #e3f2fd; color: #1565c0; }
+        ul { margin-left: 20px; }
+        li { margin: 8px 0; }
+        .source { 
+            background: #f5f5f5; padding: 10px 15px; border-left: 4px solid #667eea; 
+            margin: 15px 0; font-size: 0.9em;
+        }
+        .source a { color: #667eea; text-decoration: none; }
+        .source a:hover { text-decoration: underline; }
+        footer { text-align: center; padding: 20px; color: #666; font-size: 0.9em; }
+        .highlight { background: #fffde7; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🦷 OpenClaw 最佳实践案例报告</h1>
+            <p class="subtitle">Autonomous AI Agent 配置与自动化实战指南</p>
+            <p style="margin-top: 15px; font-size: 0.9em;">生成时间: 2026-03-01</p>
+        </header>
+
+        <div class="card">
+            <h2>📋 概述</h2>
+            <p>OpenClaw (原 ClawdBot/MoltBot) 是一个开源的自主 AI Agent 框架，支持多 agent 协作、自动化工作流、定时任务、浏览器控制等功能。本报告收集了社区验证的真实最佳实践。</p>
+        </div>
+
+        <div class="card">
+            <h2>🏗️ 多 Agent 协作架构</h2>
+            
+            <h3>1. C-Suite 代理模型</h3>
+            <p>推荐使用 COO/CTO/CMO 分工模式：</p>
+            <ul>
+                <li><strong>COO (首席运营官)</strong>：计划、调度、协调、时间盒管理</li>
+                <li><strong>CTO (首席技术官)</strong>：架构、技术实现、调试、技术风险</li>
+                <li><strong>CMO (首席营销官)</strong>：研究、定位、文案、分发、KPIs</li>
+            </ul>
+
+            <h3>2. 典型绑定配置</h3>
+            <pre><code>// openclaw.json bindings
+{
+  "agentId": "coo", "match": {"channel": "telegram", "peer": {"kind": "group", "topic": 166}},
+  "agentId": "cto", "match": {"channel": "telegram", "peer": {"kind": "group", "topic": 3}},
+  "agentId": "cmo", "match": {"channel": "telegram", "peer": {"kind": "group", "topic": 4}}
+}</code></pre>
+
+            <div class="highlight">
+                <strong>💡 关键洞察</strong>：将工作流类比为"雇佣员工"而非"构建工作流程"——OpenClaw 适合定义角色和能力，让 agent 自主决策。
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>⏰ 定时任务 (Cron) 最佳实践</h2>
+            
+            <h3>业务时间邮件检查</h3>
+            <pre><code>openclaw cron add --schedule "0 */2 9-17 * * MON-FRI" \
+  --task "Check Gmail for urgent emails, summarize to Telegram" \
+  --model claude-sonnet</code></pre>
+
+            <h3>每日汇总 (下午6点)</h3>
+            <pre><code>openclaw cron add --schedule "0 18 * * MON-FRI" \
+  --task "Generate daily activity summary from memory files, send to Telegram" \
+  --model claude-sonnet</code></pre>
+
+            <h3>每周竞品分析 (周一9点)</h3>
+            <pre><code>openclaw cron add --schedule "0 9 * * MON" \
+  --task "Research competitor pricing and features, update research/competitors.md" \
+  --model claude-opus</code></pre>
+
+            <div class="highlight">
+                <strong>⚠️ 注意事项</strong>：Cron 任务可能因 prompt 过长或 context 压缩而静默失败。保持 prompt 简洁，使用 memory_search 而非加载全部文件。
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔧 模型选择策略</h2>
+            
+            <h3>多模型组合降低成本</h3>
+            <ul>
+                <li><strong>简单任务</strong>：Gemini Flash — 免费快速</li>
+                <li><strong>复杂推理</strong>：Claude Opus / GPT-5 — 深度思考</li>
+                <li><strong>代码生成</strong>：Claude Sonnet / Codex</li>
+            </ul>
+
+            <h3>效果</h3>
+            <p>多模型策略可削减 60-80% 的 Claude 调用成本。</p>
+
+            <h3>Fallback 配置</h3>
+            <pre><code>// god agent model fallback
+{
+  "primary": "gemini-flash",
+  "fallbacks": ["nim-mistral-large", "minimax", "deepseek", "gemini-pro", "claude"]
+}</code></pre>
+        </div>
+
+        <div class="card">
+            <h2>🌐 浏览器自动化</h2>
+            
+            <h3>attachOnly 模式</h3>
+            <p>生产环境推荐使用 CDP (Chrome DevTools Protocol) 附加模式：</p>
+            <pre><code>{
+  "browser": {
+    "enabled": true,
+    "attachOnly": true,
+    "profiles": {
+      "openclaw": {
+        "cdpUrl": "http://127.0.0.1:18800",
+        "driver": "clawd"
+      }
+    }
+  }
+}</code></pre>
+
+            <h3>自动化场景</h3>
+            <span class="tag automation">表单填写</span>
+            <span class="tag automation">网页截图</span>
+            <span class="tag automation">数据抓取</span>
+            <span class="tag automation">UI测试</span>
+        </div>
+
+        <div class="card">
+            <h2>🛡️ 安全与权限配置</h2>
+            
+            <h3>Tool Policy 示例</h3>
+            <pre><code>// coo agent 工具限制
+{
+  "tools": {
+    "allow": ["read", "write", "edit", "exec", "process", "cron", ...],
+    "deny": ["browser", "gateway"]
+  }
+}</code></pre>
+
+            <h3>沙箱隔离 (CTO)</h3>
+            <pre><code>{
+  "sandbox": {
+    "mode": "all",
+    "docker": {
+      "image": "openclaw-sandbox:bookworm-slim",
+      "readOnlyRoot": true,
+      "network": "none"
+    }
+  }
+}</code></pre>
+        </div>
+
+        <div class="card">
+            <h2>🔌 自动化钩子</h2>
+            
+            <h3>Heartbeat 系统</h3>
+            <p>定期 poll agent 检查需要关注的事项：</p>
+            <pre><code>{
+  "heartbeat": {
+    "every": "30m",
+    "model": "gemini-flash",
+    "target": "none"
+  }
+}</code></pre>
+
+            <h3>Webhooks</h3>
+            <p>外部事件触发 agent 循环：webhooks、cron、队友消息等。</p>
+        </div>
+
+        <div class="card">
+            <h2>📚 参考资源</h2>
+            
+            <div class="source">
+                <a href="https://docs.openclaw.ai/gateway/configuration" target="_blank">📘 OpenClaw 官方配置文档</a>
+            </div>
+            <div class="source">
+                <a href="https://stormap.ai/post/autonomous-ai-workflows-openclaw-guide" target="_blank">📙 Building Autonomous AI Workflows with OpenClaw</a>
+            </div>
+            <div class="source">
+                <a href="https://www.reddit.com/r/AI_Agents/comments/1qv3zsn/" target="_blank">💬 Reddit: Real-world OpenClaw Setups</a>
+            </div>
+            <div class="source">
+                <a href="https://milvus.io/blog/openclaw-formerly-clawdbot-moltbot-explained-a-complete-guide-to-the-autonomous-ai-agent.md" target="_blank">📖 OpenClaw 完全指南 - Milvus</a>
+            </div>
+            <div class="source">
+                <a href="https://medium.com/@rentierdigital/21-openclaw-automations-nobody-talks-about" target="_blank">⚡ 21 OpenClaw Automations</a>
+            </div>
+        </div>
+
+        <footer>
+            <p>🦷 Generated by OpenClaw | Best Practices Report 2026</p>
+        </footer>
+    </div>
+</body>
+</html>
