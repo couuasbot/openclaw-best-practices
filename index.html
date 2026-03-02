@@ -1,165 +1,92 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenClaw 最佳实践调研报告</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <title>OpenClaw Multi-Agent Progress Report</title>
     <style>
-        body {
-            box-sizing: border-box;
-            min-width: 200px;
-            max-width: 980px;
-            margin: 0 auto;
-            padding: 45px;
-            background-color: #f6f8fa;
-        }
-        .markdown-body {
-            padding: 45px;
-            background-color: white;
-            border: 1px solid #d0d7de;
-            border-radius: 6px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-        @media (max-width: 767px) {
-            body { padding: 15px; }
-            .markdown-body { padding: 15px; }
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .header h1 {
-            border-bottom: none;
-            margin-bottom: 10px;
-            color: #0969da;
-        }
-        .header p {
-            color: #57606a;
-            font-size: 0.9em;
-        }
-        .footer {
-            margin-top: 40px;
-            text-align: center;
-            color: #57606a;
-            font-size: 0.8em;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
+        section { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        h1, h2 { color: #000; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .lang-block { padding: 10px; border-left: 4px solid #007bff; background: #f0f7ff; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 8px; }
+        .ref-list { font-size: 0.9em; }
+        code { background: #eee; padding: 2px 4px; border-radius: 4px; }
+        footer { text-align: center; color: #777; font-size: 0.8em; margin-top: 40px; }
+        @media (max-width: 600px) { .summary { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>OpenClaw 最佳实践</h1>
-        <p>生成的调研报告 • 2026-03-01</p>
-    </div>
-    
-    <article class="markdown-body">
-        <h1>OpenClaw 最佳实践调研报告</h1>
+    <header>
+        <h1>OpenClaw Multi-Agent Report (v2)</h1>
+    </header>
 
-<h2>1. 典型使用场景</h2>
+    <section>
+        <h2>Executive Summary</h2>
+        <div class="summary">
+            <div class="lang-block">
+                <strong>EN:</strong> OpenClaw's multi-agent capabilities have evolved into a robust dispatch-runner architecture. By leveraging session isolation and event-sourced workflows, the system achieves high reliability and scalability, allowing complex tasks to be delegated to specialized sub-agents while maintaining a central point of authority.
+            </div>
+            <div class="lang-block">
+                <strong>CN:</strong> OpenClaw 的多智能体能力已演进为健壮的调度-运行器（dispatch-runner）架构。通过利用会话隔离和事件溯源工作流，系统实现了高可靠性和可扩展性，允许将复杂任务委派给专门的子智能体，同时保持中央权威点。
+            </div>
+        </div>
+    </section>
 
-<h3>1.1 多 Agent 协作配置 (Multi-Agent Collaboration)</h3>
-<p>OpenClaw 采用 C-Suite 架构模型，将不同职责分配给特定的 Agent。</p>
-<ul>
-<li><strong>God (CEO)</strong>: 决策中心，负责任务分发和最终确认。</li>
-<li><strong>COO</strong>: 负责执行、调度和协调。</li>
-<li><strong>CTO</strong>: 技术架构、代码实现和风险评估。</li>
-<li><strong>CMO</strong>: 市场、文案、调研和分发。</li>
-</ul>
+    <section>
+        <h2>Recent Progress</h2>
+        <ul>
+            <li><strong>2026-03-02:</strong> Implementation of Dispatch v2 protocol with event-sourced workflows.</li>
+            <li><strong>2026-02-xx:</strong> Enhanced <code>sessions_spawn</code> with better runtime control and thread binding support.</li>
+            <li><strong>2026-01-06:</strong> Introduction of per-agent sandboxes and tool restrictions (v2026.1.6).</li>
+            <li><strong>Recent:</strong> Expanded thread binding support across multiple channels beyond Discord.</li>
+            <li><strong>Recent:</strong> Improved sub-agent queue management with multi-lane concurrency improvements in discussion.</li>
+        </ul>
+    </section>
 
-<p><strong>最佳实践：</strong></p>
-<ul>
-<li><strong>模型混合策略</strong>: 使用高智能模型（如 Claude 3.5 Sonnet）进行复杂推理，使用轻量模型（如 Gemini 1.5 Flash）处理简单任务或 Cron 任务，可降低 60-80% 的成本。</li>
-<li><strong>隔离与路由</strong>: 在 <code>openclaw.json</code> 中定义 <code>agents.list</code>，并通过 <code>bindings</code> 将特定的频道或用户绑定到特定 Agent。</li>
-</ul>
+    <section>
+        <h2>How it Works</h2>
+        <p>The core of OpenClaw's multi-agent system relies on three pillars:</p>
+        <ul>
+            <li><code>subagents/sessions_spawn</code>: Allows agents to create isolated execution environments for specific tasks. Sub-agents run with scoped toolsets and return results upon completion.</li>
+            <li><strong>Thread Bindings</strong>: Connects specific communication threads (Discord, etc.) to a session/sub-agent target, ensuring context continuity.</li>
+            <li><code>allowAgents</code>: Configuration setting that defines which agent IDs are permitted to be spawned or targeted within a specific context.</li>
+        </ul>
+    </section>
 
-<h3>1.2 自动化工作流 (Automation Workflow)</h3>
-<p>通过 <code>sessions_spawn</code> 实现任务解耦，避免阻塞主会话。</p>
-<ul>
-<li><strong>Runner 模式</strong>: 耗时较长的 <code>exec</code> 任务（如编译、大数据处理）应在独立的子 session 中运行。</li>
-<li><strong>注入模式 (Injection)</strong>: 主 Agent 可以向专家 Agent 注入 session 以获取专业意见。</li>
-</ul>
+    <section>
+        <h2>Patterns</h2>
+        <ul>
+            <li><strong>Dispatch v2</strong>: A pattern where a "God" agent acts as the central router, delegating execution to runners while specialized agents (COO/CTO/CMO) provide structured consultations.</li>
+            <li><strong>Event-Sourced Workflow</strong>: Uses an append-only <code>workflow-events.jsonl</code> as the authoritative state, allowing for recovery from failures and transparent auditing.</li>
+            <li><strong>Cron Healthcheck</strong>: Periodic background checks to ensure workflow integrity, detect timeouts, and trigger automated reconciliations.</li>
+        </ul>
+    </section>
 
-<h3>1.3 定时任务 (Cron Jobs)</h3>
-<p>OpenClaw 内置 Cron 服务，支持周期性任务和一次性任务（at）。</p>
-<ul>
-<li><strong>配置要点</strong>: 任务需在 <code>cron</code> 字段中配置，且必须包含 <code>"enabled": true</code>。</li>
-<li><strong>时区处理</strong>: 未指定时区时默认使用 UTC。</li>
-<li><strong>清理机制</strong>: 一次性任务执行成功后默认删除，可通过 <code>deleteAfterRun: false</code> 保留并禁用。</li>
-</ul>
+    <section>
+        <h2>References</h2>
+        <ol class="ref-list">
+            <li><a href="https://docs.openclaw.ai/tools/subagents">Sub-Agents - OpenClaw Docs</a></li>
+            <li><a href="https://docs.openclaw.ai/tools">Tools Reference - OpenClaw Docs</a></li>
+            <li><a href="https://docs.openclaw.ai/concepts/session-tool">Session Tools - OpenClaw Docs</a></li>
+            <li><a href="https://docs.openclaw.ai/gateway/configuration-reference">Configuration Reference - OpenClaw Docs</a></li>
+            <li><a href="https://docs.openclaw.ai/help/faq">FAQ - OpenClaw Docs</a></li>
+            <li><a href="https://docs.openclaw.ai/concepts/multi-agent">Multi-Agent Routing - OpenClaw Docs</a></li>
+            <li><a href="https://docs.openclaw.ai/tools/slash-commands">Slash Commands - OpenClaw Docs</a></li>
+            <li><a href="https://docs.openclaw.ai/tools/acp-agents">ACP Agents - OpenClaw Docs</a></li>
+            <li><a href="https://docs.openclaw.ai/channels/discord">Discord Channel Guide - OpenClaw Docs</a></li>
+            <li><a href="https://docs.openclaw.ai/concepts/agent-workspace">Agent Workspace - OpenClaw Docs</a></li>
+            <li><a href="https://github.com/openclaw/openclaw/issues/23414">Issue #23414: mode="session" requirements</a></li>
+            <li><a href="https://github.com/openclaw/openclaw/issues/5813">Issue #5813: agentToAgent.enabled side effects</a></li>
+            <li><a href="https://github.com/openclaw/openclaw/issues/17511">Issue #17511: Nested Spawning</a></li>
+            <li><a href="https://github.com/openclaw/openclaw/releases">OpenClaw Releases</a></li>
+        </ol>
+    </section>
 
-<h3>1.4 浏览器自动化 (Browser Automation)</h3>
-<p>支持 Headless Chromium 截图和 UI 交互。</p>
-<ul>
-<li><strong>环境隔离</strong>: 建议在沙箱模式下运行浏览器，配置 <code>sandbox: { mode: "non-main" }</code>。</li>
-<li><strong>兜底方案</strong>: 当内置 <code>browser</code> 工具不可用时，可使用系统安装的 Chromium 命令行进行截图并拷贝回工作目录。</li>
-</ul>
-
-<h3>1.5 消息路由配置 (Message Routing)</h3>
-<p>通过 <code>bindings</code> 灵活控制消息流向。</p>
-<ul>
-<li><strong>匹配规则</strong>: 支持按 <code>channel</code>、<code>teamId</code>、<code>peer.id</code>、<code>peer.kind</code> 匹配。</li>
-<li><strong>路由逻辑</strong>: 私聊消息通常合并到 Agent 的 <code>main</code> session，群组或频道消息按 <code>channelId</code> 隔离。</li>
-</ul>
-
-<hr>
-
-<h2>2. 关键配置示例与代码片段</h2>
-
-<h3>2.1 <code>openclaw.json</code> 基础结构</h3>
-<pre><code class="language-json">{
-  "agents": {
-    "defaults": {
-      "workspace": "~/.openclaw/workspace",
-      "sandbox": { "mode": "non-main" }
-    },
-    "list": [
-      { "id": "god", "model": "anthropic/claude-3-5-sonnet" },
-      { "id": "cmo", "model": "google/gemini-1.5-flash" }
-    ]
-  },
-  "bindings": [
-    {
-      "match": { "channel": "telegram", "peer": { "kind": "group", "id": "-100123456" } },
-      "agentId": "cmo"
-    }
-  ],
-  "cron": {
-    "jobs": [
-      {
-        "id": "daily-report",
-        "schedule": "0 9 * * *",
-        "prompt": "生成昨天的日报并发送到管理员频道",
-        "enabled": true
-      }
-    ]
-  }
-}
-</code></pre>
-
-<h3>2.2 多模型分流 (TypeScript 代码逻辑示例)</h3>
-<pre><code class="language-typescript">// 伪代码：在自定义 Skill 中根据任务复杂度选择模型
-async function runTask(task: string) {
-  const model = isComplex(task) ? "claude-3-5-sonnet" : "gemini-1.5-flash";
-  return await subagents.spawn({
-    agentId: "god",
-    model: model,
-    message: task
-  });
-}
-</code></pre>
-
-<hr>
-
-<h2>3. 性能与限制优化</h2>
-<ul>
-<li><strong>上下文管理</strong>: <code>MEMORY.md</code> 和工作空间文件会占用 Context Window。建议保持文件精简，或使用 <code>memory_search</code> 进行检索。</li>
-<li><strong>失败恢复</strong>: Cron 任务可能因提示词过长或上下文压缩而失败。建议在 Cron 任务中使用精简的 System Prompt。</li>
-<li><strong>安全防护</strong>: 高风险操作（如 <code>rm</code>）应使用 <code>trash</code> 代替，或在 <code>openclaw.json</code> 中配置 <code>approval</code> 策略。</li>
-</ul>
-    </article>
-    
-    <div class="footer">
-        Generated by <a href="https://github.com/openclaw/openclaw">OpenClaw</a>
-    </div>
+    <footer>
+        Last updated: 2026-03-02 02:00 UTC | OpenClaw Autonomous Report
+    </footer>
 </body>
 </html>
