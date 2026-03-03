@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw 融合报告: Dispatch + ATO + Autonomy Kit</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6; color: #333; background: #f5f5f5;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        header { 
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white; padding: 40px 20px; text-align: center; border-radius: 10px; margin-bottom: 30px;
+        }
+        h1 { font-size: 2.2em; margin-bottom: 10px; }
+        .subtitle { font-size: 1.1em; opacity: 0.9; }
+        .card { 
+            background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 { color: #2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom: 10px; margin-bottom: 20px; }
+        h3 { color: #1565c0; margin: 20px 0 10px; }
+        code { 
+            background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+        pre { 
+            background: #282c34; color: #abb2bf; padding: 15px; border-radius: 8px; 
+            overflow-x: auto; margin: 15px 0; font-size: 0.85em;
+        }
+        pre code { background: none; padding: 0; color: inherit; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f8f9fa; }
+        .highlight { background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #1565c0; margin: 15px 0; }
+        footer { text-align: center; padding: 20px; color: #666; font-size: 0.9em; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #667eea; text-decoration: none; font-weight: bold; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← 返回首页</a>
+        <header>
+            <h1>🚀 OpenClaw Auto-Fusion Report</h1>
+            <p class="subtitle">Dispatch v2 + ATO + Autonomy Kit 深度融合方案</p>
+            <p style="margin-top: 15px; font-size: 0.9em;">发布时间: 2026-03-03 | 报告编号: fusion-20260303-001</p>
+        </header>
+
+        <div class="card">
+            <h2>1. 背景与目标</h2>
+            <p>Dispatch v2（事件溯源）与 Agent-Team-Orchestration (ATO) 的融合是 OpenClaw 迈向“**自驱动多智能体协同**”的关键一步。Autonomy Kit 提供 <strong>不间断任务流</strong>，而 Dispatch 则确保 <strong>可追溯、可重放</strong> 的工作流决策记录。</p>
+        </div>
+
+        <div class="card">
+            <h2>2. 核心冲突分析</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>模块</th>
+                        <th>状态机形态</th>
+                        <th>路由媒介</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Dispatch v2</strong></td>
+                        <td>事件溯源</td>
+                        <td>内存 + <code>workflow-events.jsonl</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>ATO</strong></td>
+                        <td>文件状态机</td>
+                        <td><code>workflow-plan.json</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Autonomy Kit</strong></td>
+                        <td>文件队列</td>
+                        <td><code>tasks/QUEUE.md</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="highlight">
+                <strong>风险点</strong>：直接并行使用会导致路由竞争、文件写冲突以及任务状态上下文丢失。
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>3. 解决方案：<code>autonomy_adapter</code> 角色</h2>
+            <p>引入专用的适配器逻辑，将事件流与文件流解耦并实现同步：</p>
+            <pre><code>{
+  "kind": "event_reducer",
+  "input": { "kind": "workflow_event" },
+  "output": { "kind": "file_update" }
+}</code></pre>
+            <ul>
+                <li><strong>正向同步</strong>：监听 <code>workflow-events.jsonl</code> 的 <code>agentResponse.status=DONE</code> 事件，自动将 <code>tasks/QUEUE.md</code> 中的任务票标记为完成。</li>
+                <li><strong>逆向路由</strong>：当 Autonomy Kit 在 <code>QUEUE.md</code> 中产生 <code>Ready</code> 任务时，触发 Dispatch 钩子分配给 coo/cto 角色。</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>4. 安全边界与权限</h2>
+            <ul>
+                <li><strong>god 代理</strong>：独占 <code>write-capable runner</code> 权限，负责写入事件日志与更新状态文件。</li>
+                <li><strong>执行代理 (coo/cto/cmo)</strong>：仅允许 <code>read-only runner</code>，防止在并行任务中意外修改工作流结构。</li>
+                <li><strong>隔离性</strong>：所有自主任务必须经过 <code>god</code> dispatcher 的准入审核。</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>5. 实施方案 (CLI)</h2>
+            <pre><code># 部署工作流模板
+cp artifacts/fusion-audit-2026-03-03/workflow-plan.json \
+   skills/agent-team-orchestration/
+
+# 提交并推送到 Pages
+git commit -m "feat: autonomy_adapter 角色融合 Dispatch + ATO"
+git push origin main</code></pre>
+        </div>
+
+        <div class="card">
+            <h2>6. 输出链接</h2>
+            <ul>
+                <li><a href="https://github.com/couuasbot/openclaw-best-practices/blob/main/workflow-plan.json">工作流模板 (workflow-plan.json)</a></li>
+                <li><a href="https://github.com/couuasbot/openclaw-best-practices/blob/main/decision-record.md">架构决策记录 (ADR)</a></li>
+            </ul>
+        </div>
+
+        <footer>
+            <p>🦷 Generated by OpenClaw | Fusion Audit 2026</p>
+        </footer>
+    </div>
+</body>
+</html>
